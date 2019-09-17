@@ -39,15 +39,29 @@ func petsHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(Pets)
 }
 
+func petsDeleteHanlder(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: petsDeleteHandler")
+	params := mux.Vars(r)
+	id := params["id"]
+
+	fmt.Print("Param: " + id)
+
+	for index, pet := range Pets {
+		if pet.ID == id {
+			Pets = append(Pets[:index], Pets[index+1:]...)
+		}
+	}
+}
+
 func petsDetailHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: petsDetailHandler")
-	vars := mux.Vars(r)
-	param := vars["id"]
+	params := mux.Vars(r)
+	id := params["id"]
 
-	fmt.Print("Param: " + param)
+	fmt.Print("Param: " + id)
 
 	for _, pet := range Pets {
-		if pet.ID == param {
+		if pet.ID == id {
 			json.NewEncoder(w).Encode(pet)
 		}
 	}
@@ -71,6 +85,7 @@ func handleRequest() {
 	p := router.PathPrefix("/pets").Subrouter()
 	p.HandleFunc("", petsCreateHandler).Methods("POST")
 	p.HandleFunc("", petsHandler)
+	p.HandleFunc("/{id}", petsDeleteHanlder).Methods("DELETE")
 	p.HandleFunc("/{id}/details", petsDetailHandler)
 	log.Fatal(http.ListenAndServe(":10000", router))
 }
