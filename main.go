@@ -44,8 +44,6 @@ func petsDeleteHanlder(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	id := params["id"]
 
-	fmt.Print("Param: " + id)
-
 	for index, pet := range Pets {
 		if pet.ID == id {
 			Pets = append(Pets[:index], Pets[index+1:]...)
@@ -53,12 +51,25 @@ func petsDeleteHanlder(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func petsUpdateHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("Endpoint Hit: petsUpdateHandler")
+	params := mux.Vars(r)
+	id := params["id"]
+	reqBody, _ := ioutil.ReadAll(r.Body)
+
+	for index, pet := range Pets {
+		if pet.ID == id {
+			json.Unmarshal(reqBody, &pet)
+			Pets[index] = pet
+		}
+	}
+	json.NewEncoder(w).Encode(Pets)
+}
+
 func petsDetailHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: petsDetailHandler")
 	params := mux.Vars(r)
 	id := params["id"]
-
-	fmt.Print("Param: " + id)
 
 	for _, pet := range Pets {
 		if pet.ID == id {
@@ -70,7 +81,7 @@ func petsDetailHandler(w http.ResponseWriter, r *http.Request) {
 func petsCreateHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("Endpoint Hit: petsCreateHandler")
 	reqBody, _ := ioutil.ReadAll(r.Body)
-	fmt.Println(string(reqBody))
+
 	var pet Pet
 	json.Unmarshal(reqBody, &pet)
 	Pets = append(Pets, pet)
@@ -86,6 +97,7 @@ func handleRequest() {
 	p.HandleFunc("", petsCreateHandler).Methods("POST")
 	p.HandleFunc("", petsHandler)
 	p.HandleFunc("/{id}", petsDeleteHanlder).Methods("DELETE")
+	p.HandleFunc("/{id}", petsUpdateHandler).Methods("PUT")
 	p.HandleFunc("/{id}/details", petsDetailHandler)
 	log.Fatal(http.ListenAndServe(":10000", router))
 }
